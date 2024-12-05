@@ -28,10 +28,10 @@ private fun parseInput(input: String): List<String> {
     return input.lines()
 }
 
-private val MUL = """mul\(\d{1,3},\d{1,3}\)""".toRegex()
-private val DO = """do\(\)""".toRegex()
-private val DONT = """don't\(\)""".toRegex()
-private val INSTRUCTIONS = "$MUL|$DO|$DONT".toRegex()
+private val MUL by lazy { """mul\(\d{1,3},\d{1,3}\)""".toRegex() }
+private val DO by lazy { """do\(\)""".toRegex() }
+private val DONT by lazy { """don't\(\)""".toRegex() }
+private val INSTRUCTIONS by lazy { "$MUL|$DO|$DONT".toRegex() }
 
 private fun String.performMultiplication() = this
     .removePrefix("mul(")
