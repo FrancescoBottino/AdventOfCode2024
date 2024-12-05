@@ -27,30 +27,47 @@ private fun parseInput(input: String): List<List<Char>> {
     return input.lines().map { it.toList() }
 }
 
-private fun updatePosition(currentPosition: Pair<Int, Int>, direction: Pair<Int, Int>): Pair<Int, Int> {
-    return (currentPosition.first + direction.first) to (currentPosition.second + direction.second)
+private data class Position(val rowIndex: Int, val colIndex: Int)
+
+sealed class Direction(val rowOffset: Int, val colOffset: Int) {
+    data object UP_LEFT: Direction(-1, -1)
+    data object UP: Direction(-1, 0)
+    data object UP_RIGHT: Direction(-1, +1)
+    data object RIGHT: Direction(0, +1)
+    data object DOWN_RIGHT: Direction(+1, +1)
+    data object DOWN: Direction(+1, 0)
+    data object DOWN_LEFT: Direction(+1, -1)
+    data object LEFT: Direction(0, -1)
+
+    companion object {
+        val all = setOf(UP_LEFT, UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT)
+    }
 }
 
-private fun isPositionValid(position: Pair<Int, Int>, grid: List<List<Char>>): Boolean {
-    return position.first in grid.indices && position.second in grid.first().indices
+private operator fun Position.plus(direction: Direction): Position {
+    return Position(rowIndex + direction.rowOffset, colIndex + direction.colOffset)
 }
 
-private operator fun List<List<Char>>.get(position: Pair<Int, Int>): Char {
-    return this[position.first][position.second]
+private fun Position.isValid(grid: List<List<*>>): Boolean {
+    return rowIndex in grid.indices && colIndex in grid.first().indices
 }
 
-private fun isValidWord(grid: List<List<Char>>, position: Pair<Int, Int>, direction: Pair<Int, Int>): Boolean {
+private operator fun List<List<Char>>.get(position: Position): Char {
+    return this[position.rowIndex][position.colIndex]
+}
+
+private fun isValidWord(grid: List<List<Char>>, position: Position, direction: Direction): Boolean {
     val wordToFind = "XMAS"
 
-    var currentPosition: Pair<Int, Int> = position
+    var currentPosition = position
 
-    if(!isPositionValid(currentPosition, grid)) return false
+    if(!currentPosition.isValid(grid)) return false
 
     wordToFind.forEachIndexed { charIndex, char ->
         if(grid[currentPosition] == char) {
             if(charIndex != wordToFind.lastIndex) {
-                currentPosition = updatePosition(currentPosition, direction)
-                if(!isPositionValid(currentPosition, grid)) return false
+                currentPosition += direction
+                if(!currentPosition.isValid(grid)) return false
             }
         } else {
             return false
@@ -60,17 +77,17 @@ private fun isValidWord(grid: List<List<Char>>, position: Pair<Int, Int>, direct
     return true
 }
 
-private fun isValidCross(grid: List<List<Char>>, position: Pair<Int, Int>): Boolean {
+private fun isValidCross(grid: List<List<Char>>, position: Position): Boolean {
     val crossPoints = listOf(
-        (-1 to -1) to (+1 to +1),
-        (-1 to +1) to (+1 to -1),
+        Direction.UP_LEFT to Direction.DOWN_RIGHT,
+        Direction.UP_RIGHT to Direction.DOWN_LEFT,
     )
 
     return crossPoints
-        .map { (a, b) -> updatePosition(position, a) to updatePosition(position, b) }
+        .map { (a, b) -> (position + a) to (position + b) }
         .all { (a, b) ->
-            isPositionValid(a, grid) &&
-            isPositionValid(b, grid) &&
+            a.isValid(grid) &&
+            b.isValid(grid) &&
             ((grid[a] == 'M' && grid[b] == 'S') || grid[b] == 'M' && grid[a] == 'S')
         }
 }
@@ -78,24 +95,13 @@ private fun isValidCross(grid: List<List<Char>>, position: Pair<Int, Int>): Bool
 private fun part1(input: String): Int {
     val grid = parseInput(input)
 
-    val directions = listOf(
-        0 to +1,
-        0 to -1,
-        +1 to 0,
-        -1 to 0,
-        +1 to +1,
-        +1 to -1,
-        -1 to +1,
-        -1 to -1,
-    )
-
     var count = 0
 
     grid.forEachIndexed { rowIndex, row ->
         row.forEachIndexed { colIndex, char ->
-            val position = rowIndex to colIndex
+            val position = Position(rowIndex, colIndex)
             if(char == 'X') {
-                count += directions.count { direction ->
+                count += Direction.all.count { direction ->
                     isValidWord(grid, position, direction)
                 }
             }
@@ -112,8 +118,7 @@ private fun part2(input: String): Int {
 
     grid.forEachIndexed { rowIndex, row ->
         row.forEachIndexed { colIndex, char ->
-            val position = rowIndex to colIndex
-
+            val position = Position(rowIndex, colIndex)
             if(char == 'A') {
                 if(isValidCross(grid, position)) {
                     count ++
