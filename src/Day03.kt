@@ -28,20 +28,19 @@ private fun parseInput(input: String): List<String> {
     return input.lines()
 }
 
-private val MUL by lazy { """mul\(\d{1,3},\d{1,3}\)""".toRegex() }
+private val MUL by lazy { """mul\((\d{1,3}),(\d{1,3})\)""".toRegex() }
 private val DO by lazy { """do\(\)""".toRegex() }
 private val DONT by lazy { """don't\(\)""".toRegex() }
 private val INSTRUCTIONS by lazy { "$MUL|$DO|$DONT".toRegex() }
 
-private fun String.performMultiplication() = this
-    .removePrefix("mul(")
-    .removeSuffix(")")
-    .split(",", limit = 2)
-    .let { it[0].toInt() * it[1].toInt() }
+private fun MatchResult.performMultiplication(): Int {
+    val (a, b) = destructured
+    return a.toInt() * b.toInt()
+}
 
 private fun part1(input: String): Int {
     return parseInput(input).sumOf { instructionsLine ->
-        MUL.findAll(instructionsLine).sumOf { it.value.performMultiplication() }
+        MUL.findAll(instructionsLine).sumOf { it.performMultiplication() }
     }
 }
 
@@ -63,7 +62,7 @@ private fun part2(input: String): Int {
                         mulEnabled = false
                     match.value.matches(MUL) ->
                         if(mulEnabled)
-                            total += match.value.performMultiplication()
+                            total += match.performMultiplication()
 
                     else -> throw RuntimeException()
                 }
