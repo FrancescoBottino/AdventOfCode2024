@@ -39,28 +39,19 @@ private fun part1(input: String): Int {
 }
 
 private fun part2(input: String): Int {
-    var lastInstructionIndex = 0
     var total = 0
     var mulEnabled = true
 
-    do {
-        val match = INSTRUCTIONS.find(input = input, startIndex = lastInstructionIndex)
-        if(match != null) {
-            lastInstructionIndex = match.range.last
-
-            when {
-                match.value.matches(DO) ->
-                    mulEnabled = true
-                match.value.matches(DONT) ->
-                    mulEnabled = false
-                match.value.matches(MUL) ->
-                    if(mulEnabled)
-                        total += match.performMultiplication()
-
-                else -> throw RuntimeException()
-            }
+    INSTRUCTIONS.findAll(input = input).forEach { match ->
+        when {
+            match.value.matches(DO) ->
+                mulEnabled = true
+            match.value.matches(DONT) ->
+                mulEnabled = false
+            mulEnabled && match.value.matches(MUL) ->
+                total += match.performMultiplication()
         }
-    } while (match != null)
+    }
 
     return total
 }
