@@ -19,13 +19,9 @@ fun main() {
     }
 
     println("Part 2")
-    printTimedResult {
+    printTimedResult(82857512) {
         part2(input)
     }
-}
-
-private fun parseInput(input: String): List<String> {
-    return input.lines()
 }
 
 private val MUL by lazy { """mul\((\d{1,3}),(\d{1,3})\)""".toRegex() }
@@ -39,36 +35,32 @@ private fun MatchResult.performMultiplication(): Int {
 }
 
 private fun part1(input: String): Int {
-    return parseInput(input).sumOf { instructionsLine ->
-        MUL.findAll(instructionsLine).sumOf { it.performMultiplication() }
-    }
+    return MUL.findAll(input).sumOf { it.performMultiplication() }
 }
 
 private fun part2(input: String): Int {
-    return parseInput(input).sumOf { instructionsLine ->
-        var lastInstructionIndex = 0
-        var total = 0
-        var mulEnabled = true
+    var lastInstructionIndex = 0
+    var total = 0
+    var mulEnabled = true
 
-        do {
-            val match = INSTRUCTIONS.find(input = instructionsLine, startIndex = lastInstructionIndex)
-            if(match != null) {
-                lastInstructionIndex = match.range.last
+    do {
+        val match = INSTRUCTIONS.find(input = input, startIndex = lastInstructionIndex)
+        if(match != null) {
+            lastInstructionIndex = match.range.last
 
-                when {
-                    match.value.matches(DO) ->
-                        mulEnabled = true
-                    match.value.matches(DONT) ->
-                        mulEnabled = false
-                    match.value.matches(MUL) ->
-                        if(mulEnabled)
-                            total += match.performMultiplication()
+            when {
+                match.value.matches(DO) ->
+                    mulEnabled = true
+                match.value.matches(DONT) ->
+                    mulEnabled = false
+                match.value.matches(MUL) ->
+                    if(mulEnabled)
+                        total += match.performMultiplication()
 
-                    else -> throw RuntimeException()
-                }
+                else -> throw RuntimeException()
             }
-        } while (match != null)
+        }
+    } while (match != null)
 
-        total
-    }
+    return total
 }
