@@ -2,7 +2,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-@OptIn(DelicateCoroutinesApi::class)
 object Day06 {
     @JvmStatic
     fun main(args: Array<String>) {
