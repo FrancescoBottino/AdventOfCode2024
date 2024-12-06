@@ -64,16 +64,14 @@ object Day06 {
 
         return Map(
             obstacles = obstacles,
-            guardInitialPosition = guardPosition,
-            guardInitialDirection = guardDirection,
+            initialGuardState = GuardState(guardPosition, guardDirection),
             size = size,
         )
     }
 
     private data class Map(
         val obstacles: Set<Position>,
-        val guardInitialPosition: Position,
-        val guardInitialDirection: Direction,
+        val initialGuardState: GuardState,
         val size: Size,
     )
 
@@ -109,76 +107,94 @@ object Day06 {
         }
     }
 
-    private fun getGuardPath(map: Map): Set<Position> {
-        val guardTraversedPositions = mutableSetOf(map.guardInitialPosition)
-        var currentGuardPosition: Position = map.guardInitialPosition
-        var currentGuardDirection: Direction = map.guardInitialDirection
+    private data class GuardState(
+        val position: Position,
+        val direction: Direction,
+    )
+
+    private fun GuardState.move(): GuardState {
+        return GuardState(position + direction, direction)
+    }
+
+    private fun GuardState.turn(): GuardState {
+        return GuardState(position, direction.next())
+    }
+
+    private fun getGuardPath(map: Map): List<GuardState> {
+        val guardPath = mutableListOf(map.initialGuardState)
+        var currentGuardState = map.initialGuardState
 
         do {
-            var nextGuardPosition = currentGuardPosition + currentGuardDirection
+            var nextGuardState = currentGuardState.move()
 
-            while(nextGuardPosition in map.obstacles) {
-                currentGuardDirection = currentGuardDirection.next()
-                nextGuardPosition = currentGuardPosition + currentGuardDirection
+            while(nextGuardState.position in map.obstacles) {
+                currentGuardState = currentGuardState.turn()
+                nextGuardState = currentGuardState.move()
             }
 
-            val isValid = nextGuardPosition.isValid(map.size)
+            val isValid = nextGuardState.position.isValid(map.size)
 
-            if(isValid)
-                guardTraversedPositions.add(nextGuardPosition)
+            if(isValid) {
+                guardPath.add(nextGuardState)
+            }
+            currentGuardState = nextGuardState
 
-            currentGuardPosition = nextGuardPosition
         } while(isValid)
 
-        return guardTraversedPositions
+        return guardPath
     }
 
     private fun part1(input: String): Int {
         val map = parseInput(input)
-        return getGuardPath(map).size
+        return getGuardPath(map).map { it.position }.toSet().size
     }
 
-    private fun isLoop(map: Map, newObstruction: Position): Boolean {
-        val guardTraversedPositions = mutableListOf(map.guardInitialPosition to map.guardInitialDirection)
-        var currentGuardPosition: Position = map.guardInitialPosition
-        var currentGuardDirection: Direction = map.guardInitialDirection
+    private fun isLoop(map: Map, newObstacle: Position, path: List<GuardState>): Boolean {
+        val updatedObstacles = map.obstacles + newObstacle
+        val guardPath = path.toMutableSet()
+        var currentGuardState = path.lastOrNull() ?: map.initialGuardState
 
         do {
-            var nextGuardPosition = currentGuardPosition + currentGuardDirection
+            var nextGuardState = currentGuardState.move()
 
-            while(nextGuardPosition in (map.obstacles + newObstruction)) {
-                currentGuardDirection = currentGuardDirection.next()
-                nextGuardPosition = currentGuardPosition + currentGuardDirection
+            while(nextGuardState.position in updatedObstacles) {
+                currentGuardState = currentGuardState.turn()
+                nextGuardState = currentGuardState.move()
             }
 
-            val isValid = nextGuardPosition.isValid(map.size)
+            val isValid = nextGuardState.position.isValid(map.size)
 
-            if(isValid) {
-                if((nextGuardPosition to currentGuardDirection) in guardTraversedPositions)
-                    return true
-
-                guardTraversedPositions.add(nextGuardPosition to currentGuardDirection)
+            if(!isValid) {
+                return false
             }
 
-            currentGuardPosition = nextGuardPosition
-        } while(isValid)
+            if(nextGuardState in guardPath)
+                return true
 
-        return false
+            guardPath.add(nextGuardState)
+            currentGuardState = nextGuardState
+
+        } while(true)
     }
 
-    //Bruteforced, TODO optimize
     private fun part2(input: String): Int {
         val map = parseInput(input)
         val originalPath = getGuardPath(map)
+
+        //Get positions to check by taking only the first instance of each but keep track of the index in the original path
+        val toCheck = originalPath
+            .map { it.position }
+            .withIndex()
+            .distinctBy { it.value }
 
         return runBlocking {
             var count = 0
             val mutex = Mutex()
 
             coroutineScope {
-                val results = originalPath.map { newObstruction ->
+                val results = toCheck.map { (index, position) ->
                     async(Dispatchers.Default) {
-                        if (isLoop(map, newObstruction)) {
+                        if (isLoop(map, position, originalPath.subList(0, index))) {
                             mutex.withLock {
                                 count++
                             }
