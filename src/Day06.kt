@@ -33,8 +33,7 @@ object Day06 {
         val grid = input.lines().map { line -> line.toList() }
         val size = Size(grid.size, grid[0].size)
         val obstacles = mutableSetOf<Position>()
-        lateinit var guardPosition: Position
-        lateinit var guardDirection: Direction
+        lateinit var guardState: GuardState
 
         grid.forEachIndexed { rowIndex, row ->
             row.forEachIndexed { colIndex, char ->
@@ -42,29 +41,17 @@ object Day06 {
 
                 when (char) {
                     '#' -> obstacles.add(position)
-                    '^' -> {
-                        guardPosition = position
-                        guardDirection = Direction.UP
-                    }
-                    '>' -> {
-                        guardPosition = position
-                        guardDirection = Direction.RIGHT
-                    }
-                    'v' -> {
-                        guardPosition = position
-                        guardDirection = Direction.DOWN
-                    }
-                    '<' -> {
-                        guardPosition = position
-                        guardDirection = Direction.LEFT
-                    }
+                    '^' -> GuardState(position, Direction.UP)
+                    '>' -> GuardState(position, Direction.RIGHT)
+                    'v' -> GuardState(position, Direction.DOWN)
+                    '<' -> GuardState(position, Direction.LEFT)
                 }
             }
         }
 
         return Map(
             obstacles = obstacles,
-            initialGuardState = GuardState(guardPosition, guardDirection),
+            initialGuardState = guardState,
             size = size,
         )
     }
