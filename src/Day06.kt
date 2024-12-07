@@ -41,10 +41,10 @@ object Day06 {
 
                 when (char) {
                     '#' -> obstacles.add(position)
-                    '^' -> GuardState(position, Direction.UP)
-                    '>' -> GuardState(position, Direction.RIGHT)
-                    'v' -> GuardState(position, Direction.DOWN)
-                    '<' -> GuardState(position, Direction.LEFT)
+                    '^' -> guardState = GuardState(position, Direction.UP)
+                    '>' -> guardState = GuardState(position, Direction.RIGHT)
+                    'v' -> guardState = GuardState(position, Direction.DOWN)
+                    '<' -> guardState = GuardState(position, Direction.LEFT)
                 }
             }
         }
