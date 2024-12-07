@@ -1,3 +1,5 @@
+import kotlinx.coroutines.*
+
 object Day07 {
     @JvmStatic
     fun main(args: Array<String>) {
@@ -84,6 +86,22 @@ object Day07 {
 
     private fun part2(input: String): Long {
         val operators = listOf(Operator.Addition, Operator.Multiplication, Operator.Concatenation)
-        return parseInput(input).filter { equation -> checkIsValid(equation, operators) }.sumOf { it.testValue }
+        val equation = parseInput(input)
+
+        return runBlocking {
+            coroutineScope {
+                equation
+                    .map { equation ->
+                        async(Dispatchers.Default) {
+                            if(checkIsValid(equation, operators)) {
+                                equation.testValue
+                            } else null
+                        }
+                    }
+                    .awaitAll()
+                    .filterNotNull()
+                    .sum()
+            }
+        }
     }
 }
