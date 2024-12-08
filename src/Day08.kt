@@ -58,25 +58,28 @@ object Day08 {
         return rowIndex in size.rowIndexes && colIndex in size.colIndexes
     }
 
+    private fun <T> List<T>.forEachPair(operation: (T, T) -> Unit) {
+        for (i in 0..<lastIndex) {
+            for (j in (i + 1)..lastIndex) {
+                operation(get(i), get(j))
+            }
+        }
+    }
+
     private fun getValidAntinodes(antennaPositions: List<Position>, size: Size): List<Position> {
         val antinodes = mutableListOf<Position>()
 
-        for(i in 0..<antennaPositions.lastIndex) {
-            for(j in (i+1)..antennaPositions.lastIndex) {
-                val a = antennaPositions[i]
-                val b = antennaPositions[j]
+        antennaPositions.forEachPair { a, b ->
+            val rowDistance = a.rowIndex - b.rowIndex
+            val colDistance = a.colIndex - b.colIndex
 
-                val rowDistance = a.rowIndex - b.rowIndex
-                val colDistance = a.colIndex - b.colIndex
+            val p = Position(a.rowIndex + rowDistance, a.colIndex + colDistance)
+            val q = Position(b.rowIndex - rowDistance, b.colIndex - colDistance)
 
-                val p = Position(a.rowIndex + rowDistance, a.colIndex + colDistance)
-                val q = Position(b.rowIndex - rowDistance, b.colIndex - colDistance)
-
-                if(p.isValid(size))
-                    antinodes.add(p)
-                if(q.isValid(size))
-                    antinodes.add(q)
-            }
+            if(p.isValid(size))
+                antinodes.add(p)
+            if(q.isValid(size))
+                antinodes.add(q)
         }
 
         return antinodes
@@ -85,37 +88,28 @@ object Day08 {
     private fun part1(input: String): Int {
         val antennasMap = parseInput(input)
 
-        val antinodes = mutableSetOf<Position>()
-
-        antennasMap.antennas.forEach { (antennaChar, antennaPositions) ->
-            antinodes += getValidAntinodes(antennaPositions, antennasMap.size)
-        }
-
-        return antinodes.size
+        return antennasMap.antennas.map { (_, antennaPositions) ->
+            getValidAntinodes(antennaPositions, antennasMap.size)
+        }.flatten().toSet().size
     }
 
     private fun getValidAntinodesWithResonance(antennaPositions: List<Position>, size: Size): List<Position> {
         val antinodes = mutableListOf<Position>()
 
-        for(i in 0..<antennaPositions.lastIndex) {
-            for(j in (i+1)..antennaPositions.lastIndex) {
-                val a = antennaPositions[i]
-                val b = antennaPositions[j]
+        antennaPositions.forEachPair { a, b ->
+            val rowDistance = a.rowIndex - b.rowIndex
+            val colDistance = a.colIndex - b.colIndex
 
-                val rowDistance = a.rowIndex - b.rowIndex
-                val colDistance = a.colIndex - b.colIndex
+            var p = a
+            while(p.isValid(size)) {
+                antinodes.add(p)
+                p = Position(p.rowIndex + rowDistance, p.colIndex + colDistance)
+            }
 
-                var p = a
-                while(p.isValid(size)) {
-                    antinodes.add(p)
-                    p = Position(p.rowIndex + rowDistance, p.colIndex + colDistance)
-                }
-
-                var q = b
-                while(q.isValid(size)) {
-                    antinodes.add(q)
-                    q = Position(q.rowIndex - rowDistance, q.colIndex - colDistance)
-                }
+            var q = b
+            while(q.isValid(size)) {
+                antinodes.add(q)
+                q = Position(q.rowIndex - rowDistance, q.colIndex - colDistance)
             }
         }
 
@@ -125,12 +119,8 @@ object Day08 {
     private fun part2(input: String): Int {
         val antennasMap = parseInput(input)
 
-        val antinodes = mutableSetOf<Position>()
-
-        antennasMap.antennas.forEach { (antennaChar, antennaPositions) ->
-            antinodes += getValidAntinodesWithResonance(antennaPositions, antennasMap.size)
-        }
-
-        return antinodes.size
+        return antennasMap.antennas.map { (_, antennaPositions) ->
+            getValidAntinodesWithResonance(antennaPositions, antennasMap.size)
+        }.flatten().toSet().size
     }
 }
