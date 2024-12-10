@@ -78,47 +78,33 @@ object Day10 {
         return trailheads
     }
 
-    private fun getScore(trailhead: Position, topography: Topography): Int {
-        val visitedPositions = mutableSetOf<Position>()
+    private fun traverseTrail(trailhead: Position, topography: Topography, onVisited: (Position) -> Unit) {
         val positionsToVisit = mutableListOf(trailhead)
 
         while(positionsToVisit.isNotEmpty()) {
             val current = positionsToVisit.removeFirst()
-            visitedPositions += current
+            onVisited(current)
 
             val validNext = Direction.all
                 .map { direction -> current + direction }
                 .filter { newPosition ->
                     newPosition.isValid(topography.size) &&
-                    newPosition !in visitedPositions &&
-                    topography.map[newPosition] == (topography.map[current] + 1)
-                }
-
-            positionsToVisit.addAll(validNext)
-        }
-
-        return visitedPositions.count { topography.map[it] == 9 }
-    }
-
-    private fun getRating(trailhead: Position, topography: Topography): Int {
-        val visitedPositions = mutableListOf<Position>()
-        val positionsToVisit = mutableListOf(trailhead)
-
-        while(positionsToVisit.isNotEmpty()) {
-            val current = positionsToVisit.removeFirst()
-            visitedPositions += current
-
-            val validNext = Direction.all
-                .map { direction -> current + direction }
-                .filter { newPosition ->
-                    newPosition.isValid(topography.size) &&
-                            newPosition !in visitedPositions &&
                             topography.map[newPosition] == (topography.map[current] + 1)
                 }
 
             positionsToVisit.addAll(validNext)
         }
+    }
 
+    private fun getScore(trailhead: Position, topography: Topography): Int {
+        val visitedPositions = mutableSetOf<Position>()
+        traverseTrail(trailhead, topography) { visitedPositions += it }
+        return visitedPositions.count { topography.map[it] == 9 }
+    }
+
+    private fun getRating(trailhead: Position, topography: Topography): Int {
+        val visitedPositions = mutableListOf<Position>()
+        traverseTrail(trailhead, topography) { visitedPositions += it }
         return visitedPositions.count { topography.map[it] == 9 }
     }
 
