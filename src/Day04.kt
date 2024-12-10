@@ -89,8 +89,8 @@ object Day04 {
             .map { (a, b) -> (position + a) to (position + b) }
             .all { (a, b) ->
                 a.isValid(grid) &&
-                        b.isValid(grid) &&
-                        ((grid[a] == 'M' && grid[b] == 'S') || grid[b] == 'M' && grid[a] == 'S')
+                b.isValid(grid) &&
+                ((grid[a] == 'M' && grid[b] == 'S') || grid[b] == 'M' && grid[a] == 'S')
             }
     }
 
