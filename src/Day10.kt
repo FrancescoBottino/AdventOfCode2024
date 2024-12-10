@@ -89,7 +89,7 @@ object Day10 {
                 .map { direction -> current + direction }
                 .filter { newPosition ->
                     newPosition.isValid(topography.size) &&
-                            topography.map[newPosition] == (topography.map[current] + 1)
+                    topography.map[newPosition] == (topography.map[current] + 1)
                 }
 
             positionsToVisit.addAll(validNext)
