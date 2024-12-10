@@ -69,9 +69,9 @@ object Day10 {
     private fun Topography.allTrailheads(): List<Position> {
         val trailheads = mutableListOf<Position>()
 
-        map.forEachIndexed { rowInex, row ->
-            row.forEachIndexed { colInex, height ->
-                if(height == 0) trailheads.add(Position(rowInex, colInex))
+        map.forEachIndexed { rowIndex, row ->
+            row.forEachIndexed { colIndex, height ->
+                if(height == 0) trailheads.add(Position(rowIndex, colIndex))
             }
         }
 
