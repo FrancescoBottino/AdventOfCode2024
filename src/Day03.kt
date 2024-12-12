@@ -6,22 +6,22 @@ object Day03 {
         val input = readInput("Day03")
 
         println("Part 1 test")
-        printTimedResult(161) {
+        printTimedResult(expectedValue = 161) {
             part1(testInput1)
         }
 
         println("Part 1")
-        printTimedResult(190604937) {
+        printTimedResult(expectedValue = 190604937) {
             part1(input)
         }
 
         println("Part 2 test")
-        printTimedResult(48) {
+        printTimedResult(expectedValue = 48) {
             part2(testInput2)
         }
 
         println("Part 2")
-        printTimedResult(82857512) {
+        printTimedResult(expectedValue = 82857512) {
             part2(input)
         }
     }

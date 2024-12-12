@@ -5,22 +5,22 @@ object Day02 {
         val input = readInput("Day02")
 
         println("Part 1 test")
-        printTimedResult(2) {
+        printTimedResult(expectedValue = 2) {
             part1(testInput)
         }
 
         println("Part 1")
-        printTimedResult(321) {
+        printTimedResult(expectedValue = 321) {
             part1(input)
         }
 
         println("Part 2 test")
-        printTimedResult(4) {
+        printTimedResult(expectedValue = 4) {
             part2(testInput)
         }
 
         println("Part 2")
-        printTimedResult(386) {
+        printTimedResult(expectedValue = 386) {
             part2(input)
         }
     }

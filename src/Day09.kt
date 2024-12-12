@@ -8,32 +8,32 @@ object Day09 {
         val input = readInput("Day09")
 
         println("Part 1 test 1")
-        printTimedResult(60) {
+        printTimedResult(expectedValue = 60) {
             part1(testInput1)
         }
 
         println("Part 1 test 2")
-        printTimedResult(1928) {
+        printTimedResult(expectedValue = 1928) {
             part1(testInput2)
         }
 
         println("Part 1")
-        printTimedResult(6341711060162) {
+        printTimedResult(expectedValue = 6341711060162) {
             part1(input)
         }
 
         println("Part 2 test 1")
-        printTimedResult(132) {
+        printTimedResult(expectedValue = 132) {
             part2(testInput1)
         }
 
         println("Part 2 test 2")
-        printTimedResult(2858) {
+        printTimedResult(expectedValue = 2858) {
             part2(testInput2)
         }
 
         println("Part 2")
-        printTimedResult(6377400869326) {
+        printTimedResult(expectedValue = 6377400869326) {
             part2(input)
         }
     }

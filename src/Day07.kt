@@ -7,22 +7,22 @@ object Day07 {
         val input = readInput("Day07")
 
         println("Part 1 test")
-        printTimedResult(3749) {
+        printTimedResult(expectedValue = 3749) {
             part1(testInput)
         }
 
         println("Part 1")
-        printTimedResult(4555081946288) {
+        printTimedResult(expectedValue = 4555081946288) {
             part1(input)
         }
 
         println("Part 2 test")
-        printTimedResult(11387) {
+        printTimedResult(expectedValue = 11387) {
             part2(testInput)
         }
 
         println("Part 2")
-        printTimedResult(227921760109726) {
+        printTimedResult(expectedValue = 227921760109726) {
             part2(input)
         }
     }
