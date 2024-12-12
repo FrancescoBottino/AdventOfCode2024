@@ -5,17 +5,17 @@ object Day11 {
         val input = readInput("Day11")
 
         println("Part 1 test")
-        printTimedResult(55312) {
+        printTimedResult(expectedValue = 55312) {
             countStonesAfterBlinks(stones = parseInput(testInput), blinks = 25)
         }
 
         println("Part 1")
-        printTimedResult(212655) {
+        printTimedResult(expectedValue = 212655) {
             countStonesAfterBlinks(stones = parseInput(input), blinks = 25)
         }
 
         println("Part 2")
-        printTimedResult(253582809724830) {
+        printTimedResult(expectedValue = 253582809724830) {
             countStonesAfterBlinks(stones = parseInput(input), blinks = 75)
         }
     }
