@@ -20,7 +20,7 @@ object Day12 {
         }
 
         println("Part 2")
-        printTimedResult() {
+        printTimedResult(966476) {
             part2(input)
         }
     }
