@@ -26,6 +26,8 @@ fun <T> printTimedResult(expectedValue: T? = null, operation: () -> T) {
 
     println("time taken: ${result.duration}, result: ${result.value}")
     if(expectedValue != null) {
-        check(expectedValue == result.value)
+        check(expectedValue == result.value) {
+            "Expected $expectedValue but was ${result.value}"
+        }
     }
 }
