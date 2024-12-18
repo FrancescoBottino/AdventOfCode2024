@@ -169,8 +169,6 @@ object Day18 {
             } else {
                 hi = guess -1
             }
-
-            println("\n\n")
         }
 
         return lastViableByteToAdd?.let { "${it.colIndex},${it.rowIndex}" }
