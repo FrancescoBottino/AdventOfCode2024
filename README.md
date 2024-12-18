@@ -1,8 +1,8 @@
 # AdventOfCode2024
 
-Welcome to the Advent of Code[^aoc] Kotlin project created by [francescobottino][github] using the [Advent of Code Kotlin Template][template] delivered by JetBrains.
+Welcome to the Advent of Code[^aoc] Kotlin project created by [Francesco Bottino][github] using the [Advent of Code Kotlin Template][template] delivered by JetBrains.
 
-In this repository, francescobottino is about to provide solutions for the puzzles using [Kotlin][kotlin] language.
+In this repository, Francesco Bottino is about to provide solutions for the puzzles using [Kotlin][kotlin] language.
 
 If you're stuck with Kotlin-specific questions or anything related to this template, check out the following resources:
 
