@@ -22,7 +22,7 @@ object Day18 {
         }
 
         println("part 2")
-        printTimedResult(expectedValue = null) {
+        printTimedResult(expectedValue = "51,40") {
             part2(input, Size2D(71, 71), 1024)
         }
     }
