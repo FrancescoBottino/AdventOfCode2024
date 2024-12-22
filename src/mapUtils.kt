@@ -1,0 +1,1 @@
+fun <K, V> Map<K, V>.inverted(): Map<V, K> = entries.associateBy({ it.value }, { it.key })
