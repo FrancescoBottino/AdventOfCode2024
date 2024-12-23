@@ -1,3 +1,4 @@
+import Direction2D.Orthogonal.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -31,20 +32,20 @@ object Day06 {
 
     private fun parseInput(input: String): Map {
         val grid = input.lines().map { line -> line.toList() }
-        val size = Size(grid.size, grid[0].size)
-        val obstacles = mutableSetOf<Position>()
+        val size = Size2D(grid.size, grid[0].size)
+        val obstacles = mutableSetOf<Position2D>()
         lateinit var guardState: GuardState
 
         grid.forEachIndexed { rowIndex, row ->
             row.forEachIndexed { colIndex, char ->
-                val position = Position(rowIndex, colIndex)
+                val position = Position2D(rowIndex, colIndex)
 
                 when (char) {
                     '#' -> obstacles.add(position)
-                    '^' -> guardState = GuardState(position, Direction.UP)
-                    '>' -> guardState = GuardState(position, Direction.RIGHT)
-                    'v' -> guardState = GuardState(position, Direction.DOWN)
-                    '<' -> guardState = GuardState(position, Direction.LEFT)
+                    '^' -> guardState = GuardState(position, UP)
+                    '>' -> guardState = GuardState(position, RIGHT)
+                    'v' -> guardState = GuardState(position, DOWN)
+                    '<' -> guardState = GuardState(position, LEFT)
                 }
             }
         }
@@ -57,46 +58,14 @@ object Day06 {
     }
 
     private data class Map(
-        val obstacles: Set<Position>,
+        val obstacles: Set<Position2D>,
         val initialGuardState: GuardState,
-        val size: Size,
+        val size: Size2D,
     )
 
-    private data class Position(val rowIndex: Int, val colIndex: Int)
-
-    private data class Size(val rows: Int, val cols: Int) {
-        val rowIndexes get() = 0 until rows
-        val colIndexes get() = 0 until cols
-    }
-
-    private fun Position.isValid(size: Size): Boolean {
-        return rowIndex in size.rowIndexes && colIndex in size.colIndexes
-    }
-
-    private operator fun Position.plus(direction: Direction): Position {
-        return Position(rowIndex + direction.rowOffset, colIndex + direction.colOffset)
-    }
-
-    private sealed class Direction(val rowOffset: Int, val colOffset: Int) {
-        abstract fun next(): Direction
-
-        data object UP: Direction(-1, 0) {
-            override fun next(): Direction = RIGHT
-        }
-        data object RIGHT: Direction(0, +1) {
-            override fun next(): Direction = DOWN
-        }
-        data object DOWN: Direction(+1, 0) {
-            override fun next(): Direction = LEFT
-        }
-        data object LEFT: Direction(0, -1) {
-            override fun next(): Direction = UP
-        }
-    }
-
     private data class GuardState(
-        val position: Position,
-        val direction: Direction,
+        val position: Position2D,
+        val direction: Direction2D.Orthogonal,
     )
 
     private fun GuardState.move(): GuardState {
@@ -136,7 +105,7 @@ object Day06 {
         return getGuardPath(map).map { it.position }.toSet().size
     }
 
-    private fun isLoop(map: Map, newObstacle: Position, path: List<GuardState>): Boolean {
+    private fun isLoop(map: Map, newObstacle: Position2D, path: List<GuardState>): Boolean {
         val updatedObstacles = map.obstacles + newObstacle
         val guardPath = path.toMutableSet()
         var currentGuardState = path.lastOrNull() ?: map.initialGuardState

@@ -53,10 +53,10 @@ object Day15 {
 
             val directions = directionsLine.mapNotNull {
                 when(it) {
-                    '>' -> Direction2D.RIGHT
-                    '<' -> Direction2D.LEFT
-                    'v' -> Direction2D.DOWN
-                    '^' -> Direction2D.UP
+                    '>' -> Direction2D.Orthogonal.RIGHT
+                    '<' -> Direction2D.Orthogonal.LEFT
+                    'v' -> Direction2D.Orthogonal.DOWN
+                    '^' -> Direction2D.Orthogonal.UP
                     else -> null
                 }
             }
@@ -68,34 +68,7 @@ object Day15 {
     private data class Warehouse(
         val grid: Map<Position2D, Char>,
         val robotPosition: Position2D,
-        val robotDirections: List<Direction2D>,
-    )
-
-    private sealed class Direction2D private constructor (val rowOffset: Int, val colOffset: Int) {
-        data object UP: Direction2D(-1, 0) {
-            override fun toString(): String = "^"
-        }
-        data object RIGHT: Direction2D(0, +1) {
-            override fun toString(): String = ">"
-        }
-        data object DOWN: Direction2D(+1, 0) {
-            override fun toString(): String = "v"
-        }
-        data object LEFT: Direction2D(0, -1) {
-            override fun toString(): String = "<"
-        }
-    }
-
-    private data class Position2D(
-        val rowIndex: Int,
-        val colIndex: Int
-    ) {
-        override fun toString(): String = "($rowIndex, $colIndex)"
-    }
-
-    private operator fun Position2D.plus(other: Direction2D): Position2D = Position2D(
-        this.rowIndex + other.rowOffset,
-        this.colIndex + other.colOffset
+        val robotDirections: List<Direction2D.Orthogonal>,
     )
 
     private fun Warehouse.simulateMovements(): Warehouse {
@@ -165,19 +138,19 @@ object Day15 {
                     when(char) {
                         '#' -> {
                             put(newPosition, '#')
-                            put(newPosition + Direction2D.RIGHT, '#')
+                            put(newPosition + Direction2D.Orthogonal.RIGHT, '#')
                         }
                         '.' -> {
                             put(newPosition, '.')
-                            put(newPosition + Direction2D.RIGHT, '.')
+                            put(newPosition + Direction2D.Orthogonal.RIGHT, '.')
                         }
                         '@' -> {
                             put(newPosition, '@')
-                            put(newPosition + Direction2D.RIGHT, '.')
+                            put(newPosition + Direction2D.Orthogonal.RIGHT, '.')
                         }
                         'O' -> {
                             put(newPosition, '[')
-                            put(newPosition + Direction2D.RIGHT, ']')
+                            put(newPosition + Direction2D.Orthogonal.RIGHT, ']')
                         }
                         else -> throw RuntimeException("Unknown char ${char}")
                     }
@@ -192,10 +165,10 @@ object Day15 {
         val grid = this.grid.toMutableMap()
         var robotPosition = this.robotPosition
 
-        fun getMovedBoxesIfPossible(position: Position2D, direction: Direction2D): List<Position2D>? {
+        fun getMovedBoxesIfPossible(position: Position2D, direction: Direction2D.Orthogonal): List<Position2D>? {
             val (leftSide, rightSide) = when(grid[position]) {
-                '[' -> position to (position + Direction2D.RIGHT)
-                ']' -> (position + Direction2D.LEFT) to position
+                '[' -> position to (position + Direction2D.Orthogonal.RIGHT)
+                ']' -> (position + Direction2D.Orthogonal.LEFT) to position
                 else -> throw RuntimeException("Not a box at $position: ${grid[position]}")
             }
 
@@ -205,7 +178,7 @@ object Day15 {
             val rightTarget = rightSide + direction
 
             return when(direction) {
-                Direction2D.UP, Direction2D.DOWN -> when {
+                Direction2D.Orthogonal.UP, Direction2D.Orthogonal.DOWN -> when {
                     grid[leftTarget] == '#' || grid[rightTarget] == '#' -> null
                     grid[leftTarget] == '.' && grid[rightTarget] == '.' -> listOf(leftSide)
                     grid[leftTarget] == '[' && grid[rightTarget] == ']' -> getMovedBoxesIfPossible(leftTarget, direction)?.let { listOf(leftSide) + it }
@@ -230,7 +203,7 @@ object Day15 {
                     else -> throw RuntimeException("Unknown chars ${grid[leftTarget]}${grid[rightTarget]} in grid at ${leftTarget}|${rightTarget}")
                 }
 
-                Direction2D.RIGHT -> {
+                Direction2D.Orthogonal.RIGHT -> {
                     when(grid[rightTarget]!!) {
                         '#' -> null
                         '.' -> listOf(leftSide)
@@ -240,7 +213,7 @@ object Day15 {
                     }
                 }
 
-                Direction2D.LEFT -> {
+                Direction2D.Orthogonal.LEFT -> {
                     when(grid[leftTarget]!!) {
                         '#' -> null
                         '.' -> listOf(leftSide)
@@ -252,7 +225,7 @@ object Day15 {
             }
         }
 
-        fun moveRobot(direction: Direction2D) {
+        fun moveRobot(direction: Direction2D.Orthogonal) {
             when(grid[robotPosition + direction]!!) {
                 '#' -> { /*no op*/ }
                 '.' -> {
@@ -264,20 +237,20 @@ object Day15 {
                     val boxesToMove = getMovedBoxesIfPossible(robotPosition + direction, direction) ?: return
 
                     boxesToMove.reversed().toSet().forEach { left ->
-                        val right = left + Direction2D.RIGHT
+                        val right = left + Direction2D.Orthogonal.RIGHT
                         when(direction) {
-                            Direction2D.UP, Direction2D.DOWN -> {
+                            Direction2D.Orthogonal.UP, Direction2D.Orthogonal.DOWN -> {
                                 grid[left + direction] = '['
                                 grid[right + direction] = ']'
                                 grid[left] = '.'
                                 grid[right] = '.'
                             }
-                            Direction2D.LEFT -> {
+                            Direction2D.Orthogonal.LEFT -> {
                                 grid[left + direction] = '['
                                 grid[left] = ']'
                                 grid[right] = '.'
                             }
-                            Direction2D.RIGHT -> {
+                            Direction2D.Orthogonal.RIGHT -> {
                                 grid[right + direction] = ']'
                                 grid[right] = '['
                                 grid[left] = '.'
@@ -295,9 +268,9 @@ object Day15 {
         }
 
         this.robotDirections.forEachIndexed { index, direction ->
-            //println("$index) moving to $direction")
+            println("$index) moving to $direction")
             moveRobot(direction)
-            //grid.debug()
+            grid.debug()
         }
 
         return Warehouse(grid, robotPosition, emptyList())
@@ -326,9 +299,9 @@ object Day15 {
 
     private fun part2(input: String): Int {
         return parseInput(input)
-            //.also { it.grid.debug() }
+            .also { it.grid.debug() }
             .expand()
-            //.also { it.grid.debug() }
+            .also { it.grid.debug() }
             .simulateMovementsExpanded()
             .grid
             .getBoxesPositionsExpanded()

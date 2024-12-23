@@ -61,36 +61,9 @@ object Day20 {
         val end: Position2D,
     )
 
-    private data class Position2D(val rowIndex: Int, val colIndex: Int)
-
-    private sealed class Direction2D private constructor (val rowOffset: Int, val colOffset: Int) {
-        data object UP: Direction2D(-1, 0)
-        data object RIGHT: Direction2D(0, +1)
-        data object DOWN: Direction2D(+1, 0)
-        data object LEFT: Direction2D(0, -1)
-
-        companion object {
-            val all get() = listOf(UP, RIGHT, DOWN, LEFT)
-        }
-    }
-
-    private data class Size2D(val rows: Int, val cols: Int) {
-        val rowIndexes get() = 0 until rows
-        val colIndexes get() = 0 until cols
-    }
-
-    private operator fun Position2D.plus(other: Direction2D): Position2D = Position2D(
-        this.rowIndex + other.rowOffset,
-        this.colIndex + other.colOffset
-    )
-
-    private fun Position2D.isValid(size: Size2D): Boolean {
-        return rowIndex in size.rowIndexes && colIndex in size.colIndexes
-    }
-
     private fun aStar_getPath(size: Size2D, obstacles: Set<Position2D>, start: Position2D, end: Position2D): List<Pair<Position2D, Int>> {
         fun Position2D.getNeighbours(): List<Position2D> {
-            return Direction2D.all.map { this + it }.filter { it.isValid(size) && it !in obstacles }
+            return Direction2D.Orthogonal.all.map { this + it }.filter { it.isValid(size) && it !in obstacles }
         }
 
         fun heuristicDistance(start: Position2D, end: Position2D): Int {
@@ -161,7 +134,7 @@ object Day20 {
         val shortcuts = mutableMapOf<Position2D, Int>()
 
         path.forEach stepLoop@ { (stepPosition, timeTaken) ->
-            Direction2D.all.forEach directionLoop@ { direction ->
+            Direction2D.Orthogonal.all.forEach directionLoop@ { direction ->
                 val wallToRemove = stepPosition + direction
 
                 if(map[wallToRemove] != '#') {

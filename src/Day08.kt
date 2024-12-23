@@ -28,10 +28,10 @@ object Day08 {
     private fun parseInput(input: String): AntennasMap {
         val grid = input.lines().map { line -> line.toList() }
 
-        val size = Size(grid.size, grid.first().size)
+        val size = Size2D(grid.size, grid.first().size)
         val antennas = grid.mapIndexed { rowIndex, row ->
             row.mapIndexedNotNull { colIndex, char ->
-                val position = Position(rowIndex, colIndex)
+                val position = Position2D(rowIndex, colIndex)
 
                 if(char.isLetter() || char.isDigit()) {
                     char to position
@@ -43,20 +43,9 @@ object Day08 {
     }
 
     private data class AntennasMap(
-        val antennas: Map<Char, List<Position>>,
-        val size: Size,
+        val antennas: Map<Char, List<Position2D>>,
+        val size: Size2D,
     )
-
-    private data class Position(val rowIndex: Int, val colIndex: Int)
-
-    private data class Size(val rows: Int, val cols: Int) {
-        val rowIndexes get() = 0 until rows
-        val colIndexes get() = 0 until cols
-    }
-
-    private fun Position.isValid(size: Size): Boolean {
-        return rowIndex in size.rowIndexes && colIndex in size.colIndexes
-    }
 
     private fun <T> List<T>.forEachPair(operation: (T, T) -> Unit) {
         for (i in 0..<lastIndex) {
@@ -66,18 +55,15 @@ object Day08 {
         }
     }
 
-    private fun getValidAntinodes(antennaPositions: List<Position>, size: Size): List<Position> {
-        val antinodes = mutableListOf<Position>()
+    private fun getValidAntinodes(antennaPositions: List<Position2D>, size: Size2D): List<Position2D> {
+        val antinodes = mutableListOf<Position2D>()
 
         antennaPositions.forEachPair { a, b ->
-            val rowDistance = a.rowIndex - b.rowIndex
-            val colDistance = a.colIndex - b.colIndex
-
-            val p = Position(a.rowIndex + rowDistance, a.colIndex + colDistance)
-            val q = Position(b.rowIndex - rowDistance, b.colIndex - colDistance)
-
+            val p = a + (b directionTo a)
             if(p.isValid(size))
                 antinodes.add(p)
+
+            val q = b + (a directionTo b)
             if(q.isValid(size))
                 antinodes.add(q)
         }
@@ -93,23 +79,22 @@ object Day08 {
         }.flatten().toSet().size
     }
 
-    private fun getValidAntinodesWithResonance(antennaPositions: List<Position>, size: Size): List<Position> {
-        val antinodes = mutableListOf<Position>()
+    private fun getValidAntinodesWithResonance(antennaPositions: List<Position2D>, size: Size2D): List<Position2D> {
+        val antinodes = mutableListOf<Position2D>()
 
         antennaPositions.forEachPair { a, b ->
-            val rowDistance = a.rowIndex - b.rowIndex
-            val colDistance = a.colIndex - b.colIndex
-
             var p = a
+            val pDirection = (b directionTo a)
             while(p.isValid(size)) {
                 antinodes.add(p)
-                p = Position(p.rowIndex + rowDistance, p.colIndex + colDistance)
+                p += pDirection
             }
 
             var q = b
+            val qDirection = (a directionTo b)
             while(q.isValid(size)) {
                 antinodes.add(q)
-                q = Position(q.rowIndex - rowDistance, q.colIndex - colDistance)
+                q += qDirection
             }
         }
 

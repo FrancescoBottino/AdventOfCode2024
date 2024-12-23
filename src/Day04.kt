@@ -1,3 +1,5 @@
+import Direction2D.Diagonal.*
+
 object Day04 {
     @JvmStatic
     fun main(args: Array<String>) {
@@ -29,47 +31,23 @@ object Day04 {
         return input.lines().map { it.toList() }
     }
 
-    private data class Position(val rowIndex: Int, val colIndex: Int)
-
-    private sealed class Direction(val rowOffset: Int, val colOffset: Int) {
-        data object UP_LEFT: Direction(-1, -1)
-        data object UP: Direction(-1, 0)
-        data object UP_RIGHT: Direction(-1, +1)
-        data object RIGHT: Direction(0, +1)
-        data object DOWN_RIGHT: Direction(+1, +1)
-        data object DOWN: Direction(+1, 0)
-        data object DOWN_LEFT: Direction(+1, -1)
-        data object LEFT: Direction(0, -1)
-
-        companion object {
-            val all = setOf(UP_LEFT, UP, UP_RIGHT, RIGHT, DOWN_RIGHT, DOWN, DOWN_LEFT, LEFT)
-        }
-    }
-
-    private operator fun Position.plus(direction: Direction): Position {
-        return Position(rowIndex + direction.rowOffset, colIndex + direction.colOffset)
-    }
-
-    private fun Position.isValid(grid: List<List<*>>): Boolean {
-        return rowIndex in grid.indices && colIndex in grid.first().indices
-    }
-
-    private operator fun List<List<Char>>.get(position: Position): Char {
+    private operator fun List<List<Char>>.get(position: Position2D): Char {
         return this[position.rowIndex][position.colIndex]
     }
 
-    private fun isValidWord(grid: List<List<Char>>, position: Position, direction: Direction): Boolean {
+    private fun isValidWord(grid: List<List<Char>>, position: Position2D, direction: Direction2D): Boolean {
         val wordToFind = "XMAS"
+        val size = Size2D(grid.size, grid.first().size)
 
         var currentPosition = position
 
-        if(!currentPosition.isValid(grid)) return false
+        if(!currentPosition.isValid(size)) return false
 
         wordToFind.forEachIndexed { charIndex, char ->
             if(grid[currentPosition] == char) {
                 if(charIndex != wordToFind.lastIndex) {
                     currentPosition += direction
-                    if(!currentPosition.isValid(grid)) return false
+                    if(!currentPosition.isValid(size)) return false
                 }
             } else {
                 return false
@@ -79,17 +57,18 @@ object Day04 {
         return true
     }
 
-    private fun isValidCross(grid: List<List<Char>>, position: Position): Boolean {
+    private fun isValidCross(grid: List<List<Char>>, position: Position2D): Boolean {
         val crossPoints = listOf(
-            Direction.UP_LEFT to Direction.DOWN_RIGHT,
-            Direction.UP_RIGHT to Direction.DOWN_LEFT,
+            UP_LEFT to DOWN_RIGHT,
+            UP_RIGHT to DOWN_LEFT,
         )
+        val size = Size2D(grid.size, grid.first().size)
 
         return crossPoints
             .map { (a, b) -> (position + a) to (position + b) }
             .all { (a, b) ->
-                a.isValid(grid) &&
-                b.isValid(grid) &&
+                a.isValid(size) &&
+                b.isValid(size) &&
                 ((grid[a] == 'M' && grid[b] == 'S') || grid[b] == 'M' && grid[a] == 'S')
             }
     }
@@ -101,9 +80,9 @@ object Day04 {
 
         grid.forEachIndexed { rowIndex, row ->
             row.forEachIndexed { colIndex, char ->
-                val position = Position(rowIndex, colIndex)
+                val position = Position2D(rowIndex, colIndex)
                 if(char == 'X') {
-                    count += Direction.all.count { direction ->
+                    count += Direction2D.all.count { direction ->
                         isValidWord(grid, position, direction)
                     }
                 }
@@ -120,7 +99,7 @@ object Day04 {
 
         grid.forEachIndexed { rowIndex, row ->
             row.forEachIndexed { colIndex, char ->
-                val position = Position(rowIndex, colIndex)
+                val position = Position2D(rowIndex, colIndex)
                 if(char == 'A') {
                     if(isValidCross(grid, position)) {
                         count ++

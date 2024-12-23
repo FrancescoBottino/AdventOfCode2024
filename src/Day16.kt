@@ -65,40 +65,9 @@ object Day16 {
         val size: Size2D,
     )
 
-    private data class Position2D(val rowIndex: Int, val colIndex: Int)
-
-    private sealed class Direction2D private constructor (val rowOffset: Int, val colOffset: Int) {
-        data object UP: Direction2D(-1, 0)
-        data object RIGHT: Direction2D(0, +1)
-        data object DOWN: Direction2D(+1, 0)
-        data object LEFT: Direction2D(0, -1)
-
-        companion object {
-            val all get() = listOf(UP, RIGHT, DOWN, LEFT)
-        }
-    }
-
-    private data class Size2D(
-        val rowCount: Int,
-        val colCount: Int,
-    )
-
-    private operator fun Position2D.plus(other: Direction2D): Position2D = Position2D(
-        this.rowIndex + other.rowOffset,
-        this.colIndex + other.colOffset
-    )
-
-    private fun Direction2D.clockwise(): Direction2D {
-        return Direction2D.all[Math.floorMod(Direction2D.all.indexOf(this) + 1, Direction2D.all.size)]
-    }
-
-    private fun Direction2D.counterClockWise(): Direction2D {
-        return Direction2D.all[Math.floorMod(Direction2D.all.indexOf(this) - 1, Direction2D.all.size)]
-    }
-
     private data class MazeRunNode(
         val position: Position2D,
-        val direction: Direction2D,
+        val direction: Direction2D.Orthogonal,
     )
 
     private sealed class MazeRunStep(
@@ -147,7 +116,7 @@ object Day16 {
         val toVisit = mutableListOf<MazeRunNode>()
         val visited = mutableMapOf<MazeRunNode, MazeRunNodeState>()
 
-        val start = MazeRunNode(this.start, Direction2D.RIGHT)
+        val start = MazeRunNode(this.start, Direction2D.Orthogonal.RIGHT)
 
         toVisit.add(start)
 
@@ -215,23 +184,20 @@ object Day16 {
     }
 
     private fun part2(input: String): Long {
-        lateinit var maze: Maze
-        lateinit var exploration: MazeExploration
-        return parseInput(input)
-            .also { maze = it }
+        val maze = parseInput(input)
+        return maze
             .exploreMaze()
-            .also { exploration = it }
             .getWinningPaths()
             .flatten()
             .toSet()
             .also { winningPath ->
-                (0..<maze.size.rowCount).forEach { rowIndex ->
+                (maze.size.rowIndexes).forEach { rowIndex ->
                     if(rowIndex != 0) print("\n")
-                    (0..<maze.size.colCount).forEach { colIndex ->
+                    (maze.size.colIndexes).forEach { colIndex ->
                         val position = Position2D(rowIndex, colIndex)
-                        when {
-                            position !in maze.positions -> print('#')
-                            position in winningPath -> print('O')
+                        when (position) {
+                            !in maze.positions -> print('#')
+                            in winningPath -> print('O')
                             else -> print('.')
                         }
 

@@ -1,3 +1,5 @@
+import Direction2D.Orthogonal.*
+
 object Day12 {
     @JvmStatic
     fun main(args: Array<String>) {
@@ -38,41 +40,11 @@ object Day12 {
         }
     }
 
-    private data class Position2D(val rowIndex: Int, val colIndex: Int)
-
-    private data class Size2D(val rows: Int, val cols: Int) {
-        val rowIndexes get() = 0 until rows
-        val colIndexes get() = 0 until cols
-    }
-
-    private sealed class Direction2D(val rowOffset: Int, val colOffset: Int) {
-        data object UP: Direction2D(-1, 0)
-        data object RIGHT: Direction2D(0, +1)
-        data object DOWN: Direction2D(+1, 0)
-        data object LEFT: Direction2D(0, -1)
-
-        companion object {
-            val all = listOf(UP, RIGHT, DOWN, LEFT)
-        }
-    }
-
-    private operator fun Position2D.plus(direction: Direction2D): Position2D {
-        return Position2D(rowIndex + direction.rowOffset, colIndex + direction.colOffset)
-    }
-
-    private fun Position2D.isValid(size: Size2D): Boolean {
-        return rowIndex in size.rowIndexes && colIndex in size.colIndexes
-    }
-
     private operator fun <T> List<List<T>>.get(position: Position2D): T {
         return this[position.rowIndex][position.colIndex]
     }
 
     private val <T> List<List<T>>.size2D: Size2D get() = Size2D(size, first().size)
-
-    private fun Size2D.allPositions(): Set<Position2D> {
-        return rowIndexes.flatMap { rowIndex -> colIndexes.map { colIndex -> Position2D(rowIndex, colIndex) } }.toSet()
-    }
 
     private data class Region2D(
         val char: Char,
@@ -110,8 +82,7 @@ object Day12 {
             val current = toVisit.removeLast()
             regionPositions += current
 
-            Direction2D.all
-                .map { current + it }
+            current.orthogonalNeighbors()
                 .filter {
                     it.isValid(grid.size) &&
                     grid[it] == char &&
@@ -125,16 +96,14 @@ object Day12 {
 
     private fun Region2D.perimeter(grid: Grid2D): Int {
         return positions.sumOf { position ->
-            Direction2D.all
-                .map { position + it }
+            position.orthogonalNeighbors()
                 .count { !it.isValid(grid.size) || grid[it] != char }
         }
     }
 
     private fun Region2D.sidesLengthSum(grid: Grid2D): Int {
         val external = positions.filter { position ->
-            Direction2D.all
-                .map { position + it }
+            position.orthogonalNeighbors()
                 .any { !it.isValid(grid.size) || grid[it] != char }
         }
 
@@ -151,7 +120,7 @@ object Day12 {
                 .filter { it.rowIndex == rowIndex }
                 .sortedBy { it.colIndex }
                 .forEach { position ->
-                    val hasTopSideBorder = (position + Direction2D.UP)
+                    val hasTopSideBorder = (position + UP)
                         .let { !it.isValid(grid.size) || grid[it] != char }
 
                     if(hasTopSideBorder) {
@@ -172,7 +141,7 @@ object Day12 {
                         }
                     }
 
-                    val hasBotSideBorder = (position + Direction2D.DOWN)
+                    val hasBotSideBorder = (position + DOWN)
                         .let { !it.isValid(grid.size) || grid[it] != char }
 
                     if(hasBotSideBorder) {
@@ -211,7 +180,7 @@ object Day12 {
                 .filter { it.colIndex == colIndex }
                 .sortedBy { it.rowIndex }
                 .forEach { position ->
-                    val hasLeftSideBorder = (position + Direction2D.LEFT)
+                    val hasLeftSideBorder = (position + LEFT)
                         .let { !it.isValid(grid.size) || grid[it] != char }
 
                     if(hasLeftSideBorder) {
@@ -232,7 +201,7 @@ object Day12 {
                         }
                     }
 
-                    val hasRightSideBorder = (position + Direction2D.RIGHT)
+                    val hasRightSideBorder = (position + RIGHT)
                         .let { !it.isValid(grid.size) || grid[it] != char }
 
                     if(hasRightSideBorder) {

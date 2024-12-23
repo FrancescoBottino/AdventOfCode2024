@@ -42,7 +42,7 @@ object Day21 {
             isValid = { it in charAtPosition.keys }
         ).mapValues { (start, reachableNodes) ->
             reachableNodes.mapValues { (end, paths) ->
-                paths.map { path -> path.tryConvertToDirections().map { RobotAction.Move(it) } }.toSet()
+                paths.map { path -> path.tryConvertToOrthogonalDirections().map { RobotAction.Move(it) } }.toSet()
             }
         }
     }
@@ -53,10 +53,9 @@ object Day21 {
     private sealed class RobotAction {
         abstract val char: Char
 
-        data class Move(val direction: Direction2D): RobotAction() {
+        data class Move(val direction: Direction2D.Orthogonal): RobotAction() {
             override val char: Char
-                get() = direction.char()
-
+                get() = direction.char
         }
         data object Activate: RobotAction() {
             override val char: Char
