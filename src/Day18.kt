@@ -1,5 +1,3 @@
-import kotlin.math.abs
-
 object Day18 {
     @JvmStatic
     fun main(args: Array<String>) {
@@ -50,53 +48,6 @@ object Day18 {
         }
     }
 
-    private fun aStar_getDistance(size: Size2D, obstacles: Set<Position2D>, start: Position2D, end: Position2D): Int? {
-        fun Position2D.getNeighbours(): List<Position2D> {
-            return Direction2D.Orthogonal.all.map { this + it }.filter { it.isValid(size) && it !in obstacles }
-        }
-
-        fun heuristicDistance(start: Position2D, end: Position2D): Int {
-            val dx = abs(start.colIndex - end.colIndex)
-            val dy = abs(start.rowIndex - end.rowIndex)
-            return (dx + dy) + (-2) * minOf(dx, dy)
-        }
-
-        val openVertices = mutableSetOf(start)
-        val closedVertices = mutableSetOf<Position2D>()
-        val costFromStart = mutableMapOf(start to 0)
-        val estimatedTotalCost = mutableMapOf(start to heuristicDistance(start, end))
-
-        val cameFrom = mutableMapOf<Position2D, Position2D>()
-
-        while (openVertices.size > 0) {
-            val currentPos = openVertices.minBy { estimatedTotalCost.getValue(it) }
-
-            if (currentPos == end) {
-                return estimatedTotalCost.getValue(end)
-            }
-
-            openVertices.remove(currentPos)
-            closedVertices.add(currentPos)
-
-            currentPos.getNeighbours()
-                .filter { it !in closedVertices }
-                .forEach { neighbour ->
-                    val score = costFromStart.getValue(currentPos) + 1
-                    if (score < costFromStart.getOrDefault(neighbour, Int.MAX_VALUE)) {
-                        if (!openVertices.contains(neighbour)) {
-                            openVertices.add(neighbour)
-                        }
-                        cameFrom[neighbour] = currentPos
-                        costFromStart[neighbour] = score
-                        estimatedTotalCost[neighbour] = score + heuristicDistance(neighbour, end)
-                    }
-                }
-
-        }
-
-        return null
-    }
-
     private fun part1(input: String, size: Size2D, bytesNum: Int): Int {
         val obstacles = parseInput(input).take(bytesNum).toSet()
 
@@ -112,8 +63,11 @@ object Day18 {
             }
         }.println()
 
-        return aStar_getDistance(size, obstacles, start, end)
-            ?: throw RuntimeException("No path between start $start and end $end")
+        return aStar(
+            start = start,
+            end = end,
+            isValid = { position -> position.isValid(size) && position !in obstacles }
+        )?.getTotalCost() ?: throw RuntimeException("No path between start $start and end $end")
     }
 
     private fun part2(input: String, size: Size2D, bytesNum: Int): String {
@@ -129,11 +83,12 @@ object Day18 {
         while (hi >= lo) {
             val guess = lo + (hi - lo) / 2
 
-            val pathFound = aStar_getDistance(
-                size = size,
-                obstacles = allBytes.take(guess).toSet(),
+            val obstacles = allBytes.take(guess).toSet()
+
+            val pathFound = aStar(
                 start = start,
-                end = end
+                end = end,
+                isValid = { position -> position.isValid(size) && position !in obstacles }
             ) != null
 
             if(pathFound) {

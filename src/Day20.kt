@@ -1,5 +1,3 @@
-import kotlin.math.abs
-
 object Day20 {
     @JvmStatic
     fun main(args: Array<String>) {
@@ -15,6 +13,8 @@ object Day20 {
         printTimedResult(expectedValue = 1378) {
             part1(input, minimumTimeSaved = 100)
         }
+
+        TODO("Improve efficiency")
 
         println("part 2 test")
         printTimedResult(expectedValue = null) {
@@ -61,75 +61,11 @@ object Day20 {
         val end: Position2D,
     )
 
-    private fun aStar_getPath(size: Size2D, obstacles: Set<Position2D>, start: Position2D, end: Position2D): List<Pair<Position2D, Int>> {
-        fun Position2D.getNeighbours(): List<Position2D> {
-            return Direction2D.Orthogonal.all.map { this + it }.filter { it.isValid(size) && it !in obstacles }
-        }
-
-        fun heuristicDistance(start: Position2D, end: Position2D): Int {
-            val dx = abs(start.colIndex - end.colIndex)
-            val dy = abs(start.rowIndex - end.rowIndex)
-            return (dx + dy) + (-2) * minOf(dx, dy)
-        }
-
-        /**
-         * Use the cameFrom values to Backtrack to the start position to generate the path
-         */
-        fun generatePath(end: Position2D, cameFrom: Map<Position2D, Position2D>, distanceToEnd: Int): List<Pair<Position2D, Int>> {
-            val path = mutableListOf(end to distanceToEnd)
-            var currentDistance = distanceToEnd
-            var currentPosition = end
-            while (cameFrom.containsKey(currentPosition)) {
-                currentPosition = cameFrom.getValue(currentPosition)
-                currentDistance --
-                path.add(0, (currentPosition to currentDistance))
-            }
-            return path.toList()
-        }
-
-        val openVertices = mutableSetOf(start)
-        val closedVertices = mutableSetOf<Position2D>()
-        val costFromStart = mutableMapOf(start to 0)
-        val estimatedTotalCost = mutableMapOf(start to heuristicDistance(start, end))
-
-        val cameFrom = mutableMapOf<Position2D, Position2D>()
-
-        while (openVertices.size > 0) {
-            val currentPos = openVertices.minBy { estimatedTotalCost.getValue(it) }
-
-            if (currentPos == end) {
-                val distanceToEnd = estimatedTotalCost.getValue(end)
-                val path = generatePath(currentPos, cameFrom, distanceToEnd)
-                return path
-            }
-
-            openVertices.remove(currentPos)
-            closedVertices.add(currentPos)
-
-            currentPos.getNeighbours()
-                .filter { it !in closedVertices }
-                .forEach { neighbour ->
-                    val score = costFromStart.getValue(currentPos) + 1
-                    if (score < costFromStart.getOrDefault(neighbour, Int.MAX_VALUE)) {
-                        if (!openVertices.contains(neighbour)) {
-                            openVertices.add(neighbour)
-                        }
-                        cameFrom[neighbour] = currentPos
-                        costFromStart[neighbour] = score
-                        estimatedTotalCost[neighbour] = score + heuristicDistance(neighbour, end)
-                    }
-                }
-
-        }
-
-        throw RuntimeException()
-    }
-
     private fun findShortcuts(
-        path: List<Pair<Position2D, Int>>,
+        path: List<AStarStep>,
         map: Map<Position2D, Char>,
     ): Map<Position2D, Int> {
-        val distancesFromStart: Map<Position2D, Int> = path.toMap()
+        val distancesFromStart: Map<Position2D, Int> = path.associate { (position, cumulativeCost) -> position to cumulativeCost }
 
         val shortcuts = mutableMapOf<Position2D, Int>()
 
@@ -165,12 +101,12 @@ object Day20 {
     private fun part1(input: String, minimumTimeSaved: Int): Int {
         val race = parseInput(input)
 
-        val path = aStar_getPath(
-            size = race.size,
-            obstacles = race.map.filter { it.value == '#' }.keys,
+        val path = aStar(
             start = race.start,
-            end = race.end
-        )
+            end = race.end,
+            isValid = { position -> position.isValid(race.size) && race.map[position] != '#' },
+        )?.generatePath()
+            ?: throw RuntimeException("No path found")
 
         val shortcuts = findShortcuts(
             path = path,
