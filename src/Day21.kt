@@ -15,8 +15,8 @@ object Day21 {
         }
 
         println("part 2")
-        printTimedResult(expectedValue = null) {
-            simulate(input, 25)
+        printTimedResult(expectedValue = 191139369248202) {
+            simulate(input, 26)
         }
     }
 
@@ -37,92 +37,84 @@ object Day21 {
 
         val positionOfChar: Map<Char, Position2D> = charAtPosition.inverted()
 
-        val shortestPaths: Map<Position2D, Map<Position2D, Set<List<RobotAction>>>> = buildShortestPathsMap(
+        val shortestPaths: Map<Position2D, Map<Position2D, Set<List<Char>>>> = buildShortestPathsMap(
             nodesToCheck = charAtPosition.keys,
             isValid = { it in charAtPosition.keys }
         ).mapValues { (start, reachableNodes) ->
             reachableNodes.mapValues { (end, paths) ->
-                paths.map { path -> path.tryConvertToOrthogonalDirections().map { RobotAction.Move(it) } }.toSet()
+                paths.map { path -> path.asDirections().map { it.char } }.toSet()
             }
         }
-    }
 
-    private class DoorKeypad: Keypad(listOf("789", "456", "123", " 0A"))
-    private class RobotKeypad: Keypad(listOf(" ^A", "<v>"))
-
-    private sealed class RobotAction {
-        abstract val char: Char
-
-        data class Move(val direction: Direction2D.Orthogonal): RobotAction() {
-            override val char: Char
-                get() = direction.char
-        }
-        data object Activate: RobotAction() {
-            override val char: Char
-                get() = 'A'
+        fun getPath(from: Char, to: Char): Set<List<Char>> {
+            return if(from != to)
+                shortestPaths[positionOfChar[from]!!]!![positionOfChar[to]!!]!!
+            else
+                setOf(emptyList())
         }
     }
 
-    private fun findAllKeypadStepsCombinations(
-        keyToPress: List<Char>,
-        keypad: Keypad,
-    ): Set<List<RobotAction>> {
-        var currentPosition = keypad.positionOfChar['A']!!
-        var convertedRobotActions: List<List<RobotAction>> = emptyList()
+    private class DoorKeypad: Keypad(
+        """
+            789
+            456
+            123
+             0A
+        """.trimIndent().lines()
+    )
+    private class RobotKeypad: Keypad(
+        """
+             ^A
+            <v>
+        """.trimIndent().lines()
+    )
 
-        keyToPress.forEach { char ->
-            val destinationPosition = keypad.positionOfChar[char]!!
-
-            if(currentPosition == destinationPosition) {
-                convertedRobotActions = convertedRobotActions.map { it + RobotAction.Activate }
-                return@forEach
-            }
-
-            convertedRobotActions = keypad.shortestPaths[currentPosition]!![destinationPosition]!!
-                .map { path -> path + RobotAction.Activate }
-                .flatMap { newPath ->
-                    convertedRobotActions
-                        .takeIf { it.isNotEmpty() }
-                        ?.let { previousPaths -> previousPaths.map { previousPath -> previousPath + newPath } }
-                        ?: listOf(newPath)
-                }
-
-            currentPosition = destinationPosition
-        }
-
-        return convertedRobotActions.toSet()
-    }
-
-    private fun findAllPathsToTypeCode(
-        code: String, /* 029A, 980A, 179A, 456A, 379A */
-        robots: Int, /* 3 to 25*/
+    private fun shortestPathLengthForCode(
+        code: List<Char>,
+        maxDepth: Int,
         doorKeypad: DoorKeypad,
         robotKeypad: RobotKeypad,
-    ): Set<List<RobotAction>> {
-        return if(robots == 1) {
-            findAllKeypadStepsCombinations(code.toList(), doorKeypad)
-                .also { println("robots: $robots, size is: ${it.size}") }
-        } else {
-            findAllPathsToTypeCode(code, robots - 1, doorKeypad, robotKeypad)
-                .flatMap { actions -> findAllKeypadStepsCombinations(actions.map { it.char }, robotKeypad) }
-                .toSet()
-                .also { println("robots: $robots, sizes are: ${it.groupingBy { it.size }.eachCount().entries.joinToString { "size ${it.key} repeats ${it.value}" }}") }
+        level: Int = 0,
+        cache: MutableMap<Pair<List<Char>, Int>, Long> = mutableMapOf(),
+    ): Long {
+        return cache.getOrPut(code to level) {
+            if(level == maxDepth) {
+                code.size.toLong()
+            } else {
+                val keypad = if(level == 0) doorKeypad else robotKeypad
+
+                code.let { listOf('A') + it }
+                    .zipWithNext()
+                    .map { (from, to) -> keypad.getPath(from, to).map { it + 'A' }.toSet() }
+                    .sumOf { paths ->
+                        paths.minOf { path ->
+                            shortestPathLengthForCode(
+                                code = path,
+                                maxDepth = maxDepth,
+                                doorKeypad = doorKeypad,
+                                robotKeypad = robotKeypad,
+                                level = level + 1,
+                                cache = cache
+                            )
+                        }
+                    }
+            }
         }
     }
 
-    private fun simulate(input: String, robots: Int): Int {
+    private fun simulate(input: String, robots: Int): Long {
         val doorKeypad = DoorKeypad()
         val robotKeypad = RobotKeypad()
 
         return input.lines().sumOf { code ->
-            val pathLength = findAllPathsToTypeCode(
-                code = code,
-                robots = robots,
+            val pathLength = shortestPathLengthForCode(
+                code = code.toList(),
+                maxDepth = robots,
                 doorKeypad = doorKeypad,
                 robotKeypad = robotKeypad,
-            ).minOf { it.size }
+            )
 
-            code.filter { it.isDigit() }.toInt() * pathLength
+            code.filter { it.isDigit() }.toLong() * pathLength
         }
     }
 }

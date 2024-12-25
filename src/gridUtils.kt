@@ -109,11 +109,8 @@ infix fun Position2D.orthogonalDirectionTo(other: Position2D): Direction2D.Ortho
     return Direction2D.Orthogonal.all.singleOrNull { rowOffset == it.rowOffset && colOffset == it.colOffset }
 }
 
-fun List<Position2D>.tryConvertToOrthogonalDirections(): List<Direction2D.Orthogonal> {
-    return this.drop(1).fold(emptyList<Direction2D.Orthogonal>() to first()) { (directions, previous), current ->
-        val updatedDirections = directions + previous.orthogonalDirectionTo(current)!!
-        updatedDirections to current
-    }.first
+fun List<Position2D>.asDirections(): List<Direction2D.Orthogonal> {
+    return this.zipWithNext().map { (from, to) -> from.orthogonalDirectionTo(to)!! }
 }
 
 operator fun Direction2D.times(amount: Int) = Direction2D(rowOffset * amount, colOffset * amount)
